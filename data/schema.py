@@ -86,3 +86,5 @@ class ConflictAnalysis(BaseModel):
     conflict_details: List[str] = Field(default_factory=list)
     severity_level: Optional[str] = Field(default=None)
     recommendations: List[str] = Field(default_factory=list)
+    
+RoutinePlan = RoutineOutput

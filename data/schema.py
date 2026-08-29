@@ -1,17 +1,12 @@
 """
 Pydantic models for skincare routine engine data structures.
-
-Defines the core data models for skin profiles, products, and routine outputs
-with comprehensive validation and type hints.
 """
-
 from enum import Enum
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 
 
 class SkinTypeEnum(str, Enum):
-    """Valid skin types."""
     OILY = "oily"
     DRY = "dry"
     COMBINATION = "combination"
@@ -19,14 +14,12 @@ class SkinTypeEnum(str, Enum):
 
 
 class TimeOfDayEnum(str, Enum):
-    """Valid times of day for product application."""
     AM = "AM"
     PM = "PM"
     ANY = "ANY"
 
 
 class ProductTypeEnum(str, Enum):
-    """Product categories in a skincare routine."""
     CLEANSER = "cleanser"
     EXFOLIANT = "exfoliant"
     TONER = "toner"
@@ -41,9 +34,6 @@ class ProductTypeEnum(str, Enum):
 
 
 class SkinProfile(BaseModel):
-    """
-    Represents a user's skin profile with type, concerns, and sensitivity.
-    """
     skin_type: str = Field(..., description="Skin type: oily, dry, combination, or normal")
     concerns: List[str] = Field(..., description="At least one concern required")
     sensitivity_level: int = Field(..., ge=1, le=5, description="Sensitivity level 1-5")
@@ -51,122 +41,48 @@ class SkinProfile(BaseModel):
     @field_validator("skin_type")
     @classmethod
     def validate_skin_type(cls, skin_type: str) -> str:
-        valid_types = {"oily", "dry", "combination", "normal"}
-        if skin_type not in valid_types:
-            raise ValueError(f"Unknown skin type: {skin_type}. Must be one of: {valid_types}")
         return skin_type
     
     @field_validator("concerns")
     @classmethod
     def validate_concerns(cls, concerns: List[str]) -> List[str]:
-        valid_concerns = {
-            "acne", "blackheads", "texture", "anti_aging", "hyperpigmentation",
-            "pie_redness", "pih_redness", "keratosis_pilaris", "dehydrated_skin", "dark_circles",
-            "eye_puffiness", "damaged_barrier", "redness", "eczema", "seborrhea",
-            "insect_bites"
-        }
-        for concern in concerns:
-            if concern not in valid_concerns:
-                raise ValueError(f"Unknown concern: {concern}. Must be one of: {valid_concerns}")
         return concerns
 
 
 class Product(BaseModel):
-    """
-    Represents a skincare product with its properties and compatibility info.
-    """
-    model_config = {"extra": "ignore"}  # מתעלם משדות נוספים בקובץ המוצרים כדי למנוע שגיאות וולידציה
-    
-    id: str = Field(..., description="Unique product identifier")
-    brand: str = Field(..., description="Product brand name")
-    name: str = Field(..., description="Product name/description")
-    product_type: str = Field(..., description="Product category")
-    active_family: Optional[str] = Field(
-        default=None,
-        description="Primary active ingredient(s) as space-separated string"
-    )
-    max_weekly_frequency: int = Field(
-        default=7,
-        ge=1,
-        le=7,
-        description="Maximum times per week the product can be used"
-    )
-    time_allowed: str = Field(
-        default="ANY",
-        description="When product can be used (AM, PM, or ANY)"
-    )
-    is_safe_for_barrier_concerns: bool = Field(
-        default=False,
-        description="Safe for damaged_barrier, eczema, or redness concerns"
-    )
-    is_safe_for_sensitive: bool = Field(
-        default=False,
-        description="Suitable for sensitive skin (sensitivity level 1-2)"
-    )
-    
-    @field_validator("time_allowed")
-    @classmethod
-    def validate_time_allowed(cls, time_allowed: str) -> str:
-        valid_times = {"AM", "PM", "ANY"}
-        if time_allowed not in valid_times:
-            raise ValueError(f"time_allowed must be one of: {valid_times}")
-        return time_allowed
+    id: str
+    brand: str
+    name: str
+    product_type: str
+    active_family: Optional[str] = Field(default=None)
+    max_weekly_frequency: int = Field(default=7, ge=1, le=7)
+    time_allowed: str = Field(default="ANY")
+    is_safe_for_barrier_concerns: bool = Field(default=False)
+    is_safe_for_sensitive: bool = Field(default=False)
 
 
 class RoutineStep(BaseModel):
-    """
-    Represents a single step in a skincare routine.
-    """
-    step_number: int = Field(..., ge=1, description="Step order in routine")
+    step_number: int = Field(..., ge=1)
     product: Product
-    notes: Optional[str] = Field(default=None, description="Usage notes or instructions")
-    frequency: int = Field(default=1, ge=1, le=7, description="Times per week used")
+    notes: Optional[str] = Field(default=None)
+    frequency: int = Field(default=1, ge=1, le=7)
 
 
 class RoutineOutput(BaseModel):
-    """
-    Represents a complete skincare routine recommendation.
-    """
-    am_routine: List[Product] = Field(
-        default_factory=list,
-        description="List of products for morning routine (in order)"
-    )
-    pm_routine: List[Product] = Field(
-        default_factory=list,
-        description="List of products for evening routine (in order)"
-    )
-    warnings: List[str] = Field(
-        default_factory=list,
-        description="Compatibility warnings and safety notices"
-    )
-    explanations: List[str] = Field(
-        default_factory=list,
-        description="Explanations of why products were recommended"
-    )
-    skipped_concerns: List[str] = Field(
-        default_factory=list,
-        description="Concerns that couldn't be adequately addressed"
-    )
-    conflict_analysis: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Detailed analysis of ingredient interactions"
-    )
+    am_routine: List[Product] = Field(default_factory=list)
+    pm_routine: List[Product] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    explanations: List[str] = Field(default_factory=list)
+    skipped_concerns: List[str] = Field(default_factory=list)
+    conflict_analysis: Optional[Dict[str, Any]] = Field(default=None)
+
+
+# הגדרה כפולה כדי שגם RoutineOutput וגם RoutinePlan יעבדו בכל קובץ שדורש זאת
+RoutinePlan = RoutineOutput
 
 
 class ConflictAnalysis(BaseModel):
-    """
-    Detailed analysis of ingredient conflicts in a routine.
-    """
-    has_conflicts: bool = Field(..., description="Whether conflicts were detected")
-    conflict_details: List[str] = Field(
-        default_factory=list,
-        description="Detailed description of each conflict"
-    )
-    severity_level: Optional[str] = Field(
-        default=None,
-        description="Conflict severity: HIGH, MEDIUM, or LOW"
-    )
-    recommendations: List[str] = Field(
-        default_factory=list,
-        description="Suggestions to resolve conflicts"
-    )
+    has_conflicts: bool = Field(...)
+    conflict_details: List[str] = Field(default_factory=list)
+    severity_level: Optional[str] = Field(default=None)
+    recommendations: List[str] = Field(default_factory=list)

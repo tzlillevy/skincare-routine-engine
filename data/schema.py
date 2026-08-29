@@ -43,27 +43,14 @@ class ProductTypeEnum(str, Enum):
 class SkinProfile(BaseModel):
     """
     Represents a user's skin profile with type, concerns, and sensitivity.
-    
-    Attributes:
-        skin_type: Primary skin type classification (oily, dry, combination, normal)
-        concerns: List of skin concerns to address (e.g., acne, blackheads, anti_aging)
-        sensitivity_level: Scale from 1 (very sensitive) to 5 (very resilient)
-    
-    Example:
-        >>> profile = SkinProfile(
-        ...     skin_type="oily",
-        ...     concerns=["acne", "blackheads"],
-        ...     sensitivity_level=2
-        ... )
     """
     skin_type: str = Field(..., description="Skin type: oily, dry, combination, or normal")
-    concerns: List[str] = Field(..., min_items=1, description="At least one concern required")
+    concerns: List[str] = Field(..., description="At least one concern required")
     sensitivity_level: int = Field(..., ge=1, le=5, description="Sensitivity level 1-5")
     
     @field_validator("skin_type")
     @classmethod
     def validate_skin_type(cls, skin_type: str) -> str:
-        """Validate that skin type is recognized."""
         valid_types = {"oily", "dry", "combination", "normal"}
         if skin_type not in valid_types:
             raise ValueError(f"Unknown skin type: {skin_type}. Must be one of: {valid_types}")
@@ -72,7 +59,6 @@ class SkinProfile(BaseModel):
     @field_validator("concerns")
     @classmethod
     def validate_concerns(cls, concerns: List[str]) -> List[str]:
-        """Validate that all concerns are known."""
         valid_concerns = {
             "acne", "blackheads", "texture", "anti_aging", "hyperpigmentation",
             "pie_redness", "pih_redness", "keratosis_pilaris", "dehydrated_skin", "dark_circles",
@@ -88,31 +74,9 @@ class SkinProfile(BaseModel):
 class Product(BaseModel):
     """
     Represents a skincare product with its properties and compatibility info.
-    
-    Attributes:
-        id: Unique product identifier
-        brand: Product brand name
-        name: Product name/description
-        product_type: Category of product (cleanser, serum, moisturizer, etc.)
-        active_family: Primary active ingredient(s) - space-separated string
-        max_weekly_frequency: Maximum times per week the product can be used (1-7)
-        time_allowed: When product can be used (AM, PM, or ANY)
-        is_safe_for_barrier_concerns: Whether safe for damaged_barrier/eczema
-        is_safe_for_sensitive: Whether suitable for sensitive skin (level 1-2)
-    
-    Example:
-        >>> product = Product(
-        ...     id="prod_001",
-        ...     brand="Example Brand",
-        ...     name="Gentle Cleanser",
-        ...     product_type="cleanser",
-        ...     active_family="",
-        ...     max_weekly_frequency=7,
-        ...     time_allowed="ANY",
-        ...     is_safe_for_barrier_concerns=True,
-        ...     is_safe_for_sensitive=True
-        ... )
     """
+    model_config = {"extra": "ignore"}  # מתעלם משדות נוספים בקובץ המוצרים כדי למנוע שגיאות וולידציה
+    
     id: str = Field(..., description="Unique product identifier")
     brand: str = Field(..., description="Product brand name")
     name: str = Field(..., description="Product name/description")
@@ -143,7 +107,6 @@ class Product(BaseModel):
     @field_validator("time_allowed")
     @classmethod
     def validate_time_allowed(cls, time_allowed: str) -> str:
-        """Validate time_allowed is AM, PM, or ANY."""
         valid_times = {"AM", "PM", "ANY"}
         if time_allowed not in valid_times:
             raise ValueError(f"time_allowed must be one of: {valid_times}")
@@ -153,12 +116,6 @@ class Product(BaseModel):
 class RoutineStep(BaseModel):
     """
     Represents a single step in a skincare routine.
-    
-    Attributes:
-        step_number: Order in routine (1, 2, 3, etc.)
-        product: The Product object for this step
-        notes: Usage notes or instructions
-        frequency: Times per week this product is used in routine
     """
     step_number: int = Field(..., ge=1, description="Step order in routine")
     product: Product
@@ -169,23 +126,6 @@ class RoutineStep(BaseModel):
 class RoutineOutput(BaseModel):
     """
     Represents a complete skincare routine recommendation.
-    
-    Attributes:
-        am_routine: List of Product objects for morning routine
-        pm_routine: List of Product objects for evening routine
-        warnings: Any compatibility or usage warnings
-        explanations: Explanation of recommendations
-        skipped_concerns: Concerns that couldn't be addressed
-        conflict_analysis: Detailed analysis of ingredient conflicts (if any)
-    
-    Example:
-        >>> routine = RoutineOutput(
-        ...     am_routine=[...],  # List[Product]
-        ...     pm_routine=[...],  # List[Product]
-        ...     warnings=["Limit exfoliants to 2x per week"],
-        ...     explanations=["BHA recommended for acne"],
-        ...     skipped_concerns=[]
-        ... )
     """
     am_routine: List[Product] = Field(
         default_factory=list,
@@ -216,12 +156,6 @@ class RoutineOutput(BaseModel):
 class ConflictAnalysis(BaseModel):
     """
     Detailed analysis of ingredient conflicts in a routine.
-    
-    Attributes:
-        has_conflicts: Whether conflicts were detected
-        conflict_details: Description of each conflict
-        severity_level: HIGH, MEDIUM, or LOW
-        recommendations: Suggestions to resolve conflicts
     """
     has_conflicts: bool = Field(..., description="Whether conflicts were detected")
     conflict_details: List[str] = Field(

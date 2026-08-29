@@ -117,8 +117,8 @@ class Product(BaseModel):
     brand: str = Field(..., description="Product brand name")
     name: str = Field(..., description="Product name/description")
     product_type: str = Field(..., description="Product category")
-    active_family: str = Field(
-        default="",
+    active_family: Optional[str] = Field(
+        default=None,
         description="Primary active ingredient(s) as space-separated string"
     )
     max_weekly_frequency: int = Field(

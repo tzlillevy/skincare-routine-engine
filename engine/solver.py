@@ -80,9 +80,9 @@ class RoutineSolver:
         score = 0.0
         
         # התאמת זמן יום
-        if is_am and not prod.am_suitable:
+        if is_am and prod.time_allowed == "PM":
             return -100.0
-        if not is_am and not prod.pm_suitable:
+        if not is_am and prod.time_allowed == "AM":
             return -100.0
 
         # בדיקת רגישות ומחסום עור

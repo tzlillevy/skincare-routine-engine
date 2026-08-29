@@ -50,6 +50,8 @@ class SkinProfile(BaseModel):
 
 
 class Product(BaseModel):
+    model_config = {"extra": "ignore"}  # מתעלם משדות נוספים ומאפשר לטעון את כל המוצרים המלאים בלי שגיאות
+    
     id: str
     brand: str
     name: str
@@ -77,7 +79,7 @@ class RoutineOutput(BaseModel):
     conflict_analysis: Optional[Dict[str, Any]] = Field(default=None)
 
 
-# הגדרה כפולה כדי שגם RoutineOutput וגם RoutinePlan יעבדו בכל קובץ שדורש זאת
+# שורה קריטית כדי ש-RoutinePlan יעבוד במנוע החישוב
 RoutinePlan = RoutineOutput
 
 
@@ -86,5 +88,3 @@ class ConflictAnalysis(BaseModel):
     conflict_details: List[str] = Field(default_factory=list)
     severity_level: Optional[str] = Field(default=None)
     recommendations: List[str] = Field(default_factory=list)
-    
-RoutinePlan = RoutineOutput

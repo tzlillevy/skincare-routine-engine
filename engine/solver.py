@@ -2,7 +2,8 @@
 RoutineSolver - אלגוריתם בחירה וניקוד מותאם אישית לשגרות טיפוח.
 """
 from typing import List, Dict, Optional
-from data.schema import SkinProfile, Product, RoutinePlan
+from data.schema import SkinProfile, Product
+from data.schema import RoutineOutput as RoutinePlan
 from data.products import SEED_PRODUCTS
 from data.concerns import get_concern_ingredients
 from engine.conflicts import check_product_conflict
